@@ -8,6 +8,9 @@ import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializerConfig;
 import io.confluent.kafka.streams.serdes.json.KafkaJsonSchemaSerde;
 import lombok.SneakyThrows;
 import lombok.extern.java.Log;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Serdes;
@@ -44,6 +47,16 @@ public class App extends LogAndContinueExceptionHandler {
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put("default.deserialization.exception.handler", App.class.getName());
 
+        // Create topics if they do not exist
+        AdminClient admin = KafkaAdminClient.create(props);
+        admin.createTopics(
+                Set.of(
+                        new NewTopic("shoestore_clickstream", 10, (short) 3),
+                        new NewTopic("shoestore_shoe", 6, (short) 3).configs(Map.of("cleanup.policy", "compact")),
+                        new NewTopic("shoestore_clickstream_product_views", 6, (short) 3).configs(Map.of("cleanup.policy", "compact"))
+                )
+        );
+
         // Json Schema Serde
         Map<String, Object> serdeConfig = new HashMap<>();
         serdeConfig.put("schema.registry.url", props.get("schema.registry.url"));
@@ -71,7 +84,7 @@ public class App extends LogAndContinueExceptionHandler {
         clicks.peek((key, value) -> log.info("Click: " + value + " with key: " + key));
         KTable<String, ShoestoreShoe> shoes = builder.stream("shoestore_shoe", Consumed.with(Serdes.String(), shoestoreShoeKafkaJsonSchemaSerde)).selectKey(
                 (key, value) -> value.getId()
-        ).toTable();
+        ).toTable(Named.as("shoestore_shoe_table"));
         shoes.toStream().peek((key, value) -> log.info("Shoe: " + value + " with key: " + key));
 
         // Click Shoe join
@@ -101,6 +114,7 @@ public class App extends LogAndContinueExceptionHandler {
                         .groupByKey(Grouped.with(Serdes.String(), shoestoreClickstreamEnrichedKafkaJsonSchemaSerde))
                         .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMinutes(10), Duration.ofMinutes(1)))
                         .count();
+
         productViews.toStream()
                 .map((key, value) -> new KeyValue<>(windowedKeyToString(key), value))
                 .peek(
