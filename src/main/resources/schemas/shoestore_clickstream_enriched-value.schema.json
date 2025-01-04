@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jrnd-io/jr/pkg/types/shoestore-clickstream-enriched",
+  "$ref": "#/$defs/ShoestoreClickstreamEnriched",
+  "$defs": {
+    "ShoestoreClickstreamEnriched": {
+      "properties": {
+        "product_id": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "view_time": {
+          "type": "integer"
+        },
+        "page_url": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "ts": {
+          "type": "integer"
+        },
+        "product_name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "product_id",
+        "user_id",
+        "view_time",
+        "page_url",
+        "ip",
+        "ts",
+        "product_name"
+      ]
+    }
+  }
+}

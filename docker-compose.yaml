@@ -1,0 +1,212 @@
+---
+services:
+  controller-1:
+    image: confluentinc/cp-server:${CFLT_TAG}
+    hostname: controller-1
+    container_name: controller-1
+
+    environment:
+      KAFKA_NODE_ID: 1
+      CLUSTER_ID: Nk018hRAQFytWskYqtQduw
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://controller-1:19091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:19091
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: controller-1
+      KAFKA_BROKER_RACK: rack-0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_OFFSET_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 3
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 19091:19091
+
+  kafka-1:
+    image: confluentinc/cp-server:${CFLT_TAG}
+    hostname: kafka-1
+    container_name: kafka-1
+
+    healthcheck:
+      test: curl -fail --silent http://kafka-1:8090/kafka/v3/clusters/ --output /dev/null || exit 1
+      interval: 10s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      - controller-1
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://kafka-1:19092, EXTERNAL://0.0.0.0:9091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:19092, EXTERNAL://localhost:9091
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 10001
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_BROKER_RACK: rack-0
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE: True
+      KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: True
+      KAFKA_NODE_ID: 2
+      CLUSTER_ID: Nk018hRAQFytWskYqtQduw
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:19091
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 9091:9091
+      - 10001:10001
+      - 10101:8091
+      - 10201:8090
+
+  kafka-2:
+    image: confluentinc/cp-server:${CFLT_TAG}
+    hostname: kafka-2
+    container_name: kafka-2
+
+    healthcheck:
+      test: curl -fail --silent http://kafka-2:8090/kafka/v3/clusters/ --output /dev/null || exit 1
+      interval: 10s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      - controller-1
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://kafka-2:19093, EXTERNAL://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:19093, EXTERNAL://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 10002
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_BROKER_RACK: rack-0
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE: True
+      KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: True
+      KAFKA_NODE_ID: 3
+      CLUSTER_ID: Nk018hRAQFytWskYqtQduw
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:19091
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 9092:9092
+      - 10002:10002
+      - 10102:8091
+      - 10202:8090
+
+  kafka-3:
+    image: confluentinc/cp-server:${CFLT_TAG}
+    hostname: kafka-3
+    container_name: kafka-3
+
+    healthcheck:
+      test: curl -fail --silent http://kafka-3:8090/kafka/v3/clusters/ --output /dev/null || exit 1
+      interval: 10s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      - controller-1
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://kafka-3:19094, EXTERNAL://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:19094, EXTERNAL://localhost:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 10003
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_BROKER_RACK: rack-0
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE: True
+      KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: True
+      KAFKA_NODE_ID: 4
+      CLUSTER_ID: Nk018hRAQFytWskYqtQduw
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:19091
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 9093:9093
+      - 10003:10003
+      - 10103:8091
+      - 10203:8090
+
+  schema-registry-1:
+    image: confluentinc/cp-schema-registry:${CFLT_TAG}
+    hostname: schema-registry-1
+    container_name: schema-registry-1
+
+    healthcheck:
+      test: curl -fail --silent http://schema-registry-1:8081/subjects --output /dev/null || exit 1
+      interval: 10s
+      retries: 20
+      start_period: 20s
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-1
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    ports:
+      - 8081:8081
+
+  kafka-ui:
+    container_name: kui
+    image: provectuslabs/kafka-ui:${KUI_TAG}
+    ports:
+      - 18080:8080
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry-1:8081
+      KAFKA_CLUSTERS_0_AUDIT_TOPICAUDITENABLED: 'true'
+      KAFKA_CLUSTERS_0_AUDIT_CONSOLEAUDITENABLED: 'true'
+
+  jr:
+    image: ghcr.io/jrnd-io/jr:${JR_TAG}
+    hostname: jr
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    container_name: jr
+    command: >
+      /bin/sh -c "
+      echo 'Starting JR...';
+      tail -f /dev/null
+      "
+    restart: on-failure
+    environment:
+      JR_SYSTEM_DIR: '/home/jr/.jr'
+    volumes:
+      - $PWD/kafka/config.properties:/kafka/config.properties
+      - $PWD/kafka/registry.properties:/kafka/registry.properties

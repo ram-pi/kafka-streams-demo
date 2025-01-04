@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jrnd-io/jr/pkg/types/shoestore-shoe",
+  "$ref": "#/$defs/ShoestoreShoe",
+  "$defs": {
+    "ShoestoreShoe": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sale_price": {
+          "type": "string"
+        },
+        "brand": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "sale_price",
+        "brand",
+        "name",
+        "rating"
+      ]
+    }
+  }
+}
