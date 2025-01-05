@@ -51,8 +51,8 @@ public class App extends LogAndContinueExceptionHandler {
         AdminClient admin = KafkaAdminClient.create(props);
         admin.createTopics(
                 Set.of(
-                        new NewTopic("shoestore_clickstream", 10, (short) 3),
-                        new NewTopic("shoestore_shoe", 6, (short) 3).configs(Map.of("cleanup.policy", "compact")),
+                        new NewTopic("shoestore_clickstream", 6, (short) 3),
+                        new NewTopic("shoestore_shoe", 6, (short) 3),
                         new NewTopic("shoestore_clickstream_product_views", 6, (short) 3).configs(Map.of("cleanup.policy", "compact"))
                 )
         );
@@ -82,6 +82,7 @@ public class App extends LogAndContinueExceptionHandler {
                 (key, value) -> value.getProductId()
         );
         clicks.peek((key, value) -> log.info("Click: " + value + " with key: " + key));
+
         KTable<String, ShoestoreShoe> shoes = builder.stream("shoestore_shoe", Consumed.with(Serdes.String(), shoestoreShoeKafkaJsonSchemaSerde)).selectKey(
                 (key, value) -> value.getId()
         ).toTable(Named.as("shoestore_shoe_table"));
