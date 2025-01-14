@@ -1,7 +1,7 @@
 package com.github.rampi;
 
 import com.github.rampi.state.BoundedMemoryRocksDBConfig;
-import com.github.rampi.topology.MyTopology;
+import com.github.rampi.topology.MyTopologyWithCustomRetention;
 import io.confluent.common.utils.Utils;
 import lombok.SneakyThrows;
 import lombok.extern.java.Log;
@@ -18,24 +18,19 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.errors.LogAndContinueExceptionHandler;
 import org.apache.kafka.streams.processor.ProcessorContext;
 
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 @Log
-public class App extends LogAndContinueExceptionHandler {
+public class MyAppWithCustomRetention extends LogAndContinueExceptionHandler {
 
-    final static String APP_NAME = "my-kafka-streams-app";
+    final static String APP_NAME = "my-kafka-streams-with-custom-retention";
 
     @SneakyThrows
     public static void main(String[] args) {
         log.info("My stateful KStream App!");
 
-        // This kafka stream app will read from shoestore_clickstream topic and calculate how many views each product has every 5 minutes
-        // The result will be written to shoestore_clickstream_product_views topic
-        // The result will be a KTable with the following schema:
-        // key: product_id
-        // value: number of views
+        // count maximum number of views for each product every 5 minutes
 
         // Set up configuration properties for the Kafka Streams application
         Properties props = Utils.loadProps("client.properties");
@@ -43,7 +38,7 @@ public class App extends LogAndContinueExceptionHandler {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
-        props.put("default.deserialization.exception.handler", App.class.getName());
+        props.put("default.deserialization.exception.handler", MyAppWithCustomRetention.class.getName());
 
         // rocksdb tuning
         props.put(StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG, BoundedMemoryRocksDBConfig.class.getName());
@@ -54,13 +49,11 @@ public class App extends LogAndContinueExceptionHandler {
         AdminClient admin = KafkaAdminClient.create(props);
         admin.createTopics(
                 Set.of(
-                        new NewTopic("shoestore_clickstream", 6, (short) 3),
-                        new NewTopic("shoestore_shoe", 6, (short) 3),
-                        new NewTopic("shoestore_clickstream_product_views", 6, (short) 3).configs(Map.of("cleanup.policy", "compact"))
+                        new NewTopic("shoestore_clickstream", 1, (short) 3)
                 )
         );
 
-        Topology topology = MyTopology.build(props);
+        Topology topology = MyTopologyWithCustomRetention.build(props);
 
         // Print the topology of the Kafka Streams application to the console
         log.info("Topology: " + topology.describe());
@@ -99,7 +92,6 @@ public class App extends LogAndContinueExceptionHandler {
         // Start the Kafka Streams application
         streams.start();
     }
-
 
     @Override
     public DeserializationHandlerResponse handle(ProcessorContext context, ConsumerRecord<byte[], byte[]> record, Exception exception) {
